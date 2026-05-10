@@ -8,7 +8,7 @@ BITMAP_BYTE_SIZE = 8
 
 secondary_bitmap_available = False
 
-HEX_STRING ="""
+SAMPLE_HEX_STRING ="""
             30 32 30 30 F2 38 44 80 20 C0 80 00 00 00 00 00
             00 00 00 00 31 36 34 31 31 31 31 31 31 31 31 31
             31 31 31 31 31 31 30 30 30 30 30 30 30 30 30 30
@@ -19,7 +19,7 @@ HEX_STRING ="""
             35 31 32 31 30 31 31 32 33 34 35 30 30 30 30 30
             30 30 54 45 52 4D 30 30 30 31 4D 45 52 43 48
             41 4E 54 31 32 33 20 20 20 20 35 36 36"""
-raw_bytes = bytes.fromhex(HEX_STRING)
+raw_bytes = bytes.fromhex(SAMPLE_HEX_STRING)
 
 # mti is the first four bytes
 mti_bytes = raw_bytes[:MTI_BYTE_SIZE]
@@ -64,13 +64,14 @@ while index < len(bmp_bin_string):
 
 # main loop
 for element_index in available_data_elements:
+
+    # TODO: confirm type based on content_type
     field_max_length = DATA_ELEMENT_FORMAT[element_index].field_max_length
 
     #for fixed length data elements
     if DATA_ELEMENT_FORMAT[element_index].is_fixed:
         data_bytes = raw_bytes[raw_byte_position: raw_byte_position + field_max_length]
         DATA_STRING = ''.join([chr(byte) for byte in data_bytes])
-        # TODO: confirm type based on content_type
         raw_byte_position += field_max_length
         print(element_index, DATA_STRING, DATA_ELEMENT_FORMAT[element_index].meaning)
 
