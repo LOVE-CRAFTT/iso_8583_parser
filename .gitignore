@@ -58,6 +58,6 @@ src/testTestingRootWkspc/coverageWorkspace/.coverage
 ai-artifacts/*
 
 
-# planning
-notes.txt
-plan.txt
+# miscellaneous
+*.txt
+*.pdf
