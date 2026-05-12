@@ -65,7 +65,10 @@ DATA_ELEMENT_FORMAT = {
     49:  DataElementFormat('a or n',True,  3,   'Currency code, transaction'),
     50:  DataElementFormat('a or n',True,  3,   'Currency code, settlement'),
     51:  DataElementFormat('a or n',True,  3,   'Currency code, cardholder billing'),
-    52:  DataElementFormat('b',     True,  64,  'Personal identification number (PIN) data'),
+
+    # field_max_length should be 64, but since the implementation reads bytes
+    # and 64 bits = 8 bytes, the change was made
+    52:  DataElementFormat('b',     True,  8,  'Personal identification number (PIN) data'),
     53:  DataElementFormat('n',     True,  16,  'Security related control information'),
     54:  DataElementFormat('an',    False, 120, 'Additional amounts'),
     55:  DataElementFormat('ans',   False, 999, 'ICC data / EMV data (TLV)'),
@@ -77,7 +80,9 @@ DATA_ELEMENT_FORMAT = {
     61:  DataElementFormat('ans',   False, 999, 'Reserved (private)'),
     62:  DataElementFormat('ans',   False, 999, 'Reserved (private)'),
     63:  DataElementFormat('ans',   False, 999, 'Reserved (private)'),
-    64:  DataElementFormat('b',     True,  64,  'Message authentication code (MAC)'),
+
+    # # same reason as DE 52
+    64:  DataElementFormat('b',     True,  8,  'Message authentication code (MAC)'),
     65:  DataElementFormat('b',     True,  1,   'Extended bitmap indicator'),
     66:  DataElementFormat('n',     True,  1,   'Settlement code'),
     67:  DataElementFormat('n',     True,  2,   'Extended payment code'),
@@ -109,7 +114,9 @@ DATA_ELEMENT_FORMAT = {
     93:  DataElementFormat('an',    True,  5,   'Response indicator'),
     94:  DataElementFormat('an',    True,  7,   'Service indicator'),
     95:  DataElementFormat('an',    True,  42,  'Replacement amounts'),
-    96:  DataElementFormat('b',     True,  64,  'Message security code'),
+
+    # same reason as DE 52 and 64
+    96:  DataElementFormat('b',     True,  8,  'Message security code'),
     97:  DataElementFormat('x+n',   True,  16,  'Net settlement amount'),
     98:  DataElementFormat('ans',   True,  25,  'Payee'),
     99:  DataElementFormat('n',     False, 11,  'Settlement institution identification code'),
@@ -141,5 +148,7 @@ DATA_ELEMENT_FORMAT = {
     125: DataElementFormat('ans',   False, 999, 'Reserved for private use'),
     126: DataElementFormat('ans',   False, 999, 'Reserved for private use'),
     127: DataElementFormat('ans',   False, 999, 'Reserved for private use'),
-    128: DataElementFormat('b',     True,  64,  'Message authentication code'),
+
+    # same reason as DE 52, 64 and 96
+    128: DataElementFormat('b',     True,  8,  'Message authentication code'),
 }

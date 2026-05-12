@@ -24,22 +24,21 @@ secondary_bitmap_available = False
 
 # Real sample from sarvatra technologies
 SAMPLE_HEX_STRING = """
-    30 32 30 30 72 3A 80 11 2C A1 C0 10 31 36 30 30
-    30 30 30 30 32 30 31 33 30 30 36 37 39 31 33 30
-    31 30 30 30 30 30 30 30 30 30 30 30 30 30 30 30
-    31 31 32 30 30 37 34 31 34 38 38 31 38 35 32 31
-    30 37 34 31 34 38 31 31 32 30 31 31 32 30 31 31
+    30 32 32 30 72 3A 80 11 2C A1 C0 10 31 36 30 30
+    30 30 30 30 30 30 30 30 30 30 30 39 39 38 31 39
+    30 30 30 30 30 30 30 30 30 30 30 32 30 30 30 30
+    31 31 32 30 30 39 31 35 32 32 38 31 38 35 33 33
+    30 39 31 35 32 32 31 31 32 30 31 31 32 30 31 31
     32 30 43 30 30 30 30 30 30 30 30 30 34 31 31 31
-    31 33 37 31 30 30 30 30 30 30 30 31 32 33 34 35
-    36 37 38 44 31 39 31 32 30 30 30 30 30 30 30 30
-    30 30 30 30 30 30 30 31 31 33 32 34 30 30 30 30
-    31 33 30 38 38 31 38 35 32 31 39 30 30 34 32 30
-    30 31 4D 41 49 4E 20 42 52 41 4E 43 48 20 20 20
-    20 20 20 20 20 20 20 20 20 50 45 54 48 20 56 41
-    44 47 41 4F 4E 20 4D 48 49 4E 30 31 36 31 30 30
-    30 30 30 30 30 31 32 33 34 35 36 37 38 33 35 36
-    30 30 30 30 31 36 32 30 31 31 32 30 31 31 32 30
-    31 31 32 30 31 31
+    31 33 31 31 30 30 30 30 30 30 30 31 32 33 34 35
+    36 37 38 44 32 30 30 32 31 32 36 30 30 30 32 31
+    38 30 31 33 32 34 30 39 38 31 38 35 33 33 30 32
+    33 37 35 38 39 30 30 34 32 30 30 31 4D 41 49 4E
+    20 42 52 41 4E 43 48 20 20 20 20 20 20 20 20 20
+    20 20 50 45 54 48 20 56 41 44 47 41 4F 4E 20 4D
+    48 20 49 4E 30 31 36 31 30 30 30 30 30 30 30 31
+    32 33 34 35 36 37 38 33 35 36 33 35 36 30 31 36
+    32 30 31 31 32 30 31 31 32 30 31 31 32 30 31 31
 """
 
 raw_bytes = bytes.fromhex(SAMPLE_HEX_STRING)
@@ -90,9 +89,10 @@ while index < len(bmp_bin_string):
 for element_index in available_data_elements:
     field_max_length = DATA_ELEMENT_FORMAT[element_index].field_max_length
     content_type = DATA_ELEMENT_FORMAT[element_index].content_type
+    is_fixed_length_DE = DATA_ELEMENT_FORMAT[element_index].is_fixed
 
     #for fixed length data elements
-    if DATA_ELEMENT_FORMAT[element_index].is_fixed:
+    if is_fixed_length_DE:
 
         # special case if content_type is x+n:
         # an extra byte is read
@@ -100,8 +100,14 @@ for element_index in available_data_elements:
         if content_type == 'x+n':
             field_max_length += 1
 
+        # another special case if its a binary field DE,
+        # I'm giving hexadecimal characters since its binary information
+        # else its just ASCII/unicode
         data_bytes = raw_bytes[raw_byte_position: raw_byte_position + field_max_length]
-        DATA_STRING = ''.join([chr(byte) for byte in data_bytes])
+        if content_type == 'b':
+            DATA_STRING = ''.join([format(byte, "02x") for byte in data_bytes])
+        else:
+            DATA_STRING = ''.join([chr(byte) for byte in data_bytes])
         raw_byte_position += field_max_length
         print(element_index, DATA_STRING, DATA_ELEMENT_FORMAT[element_index].meaning)
 
