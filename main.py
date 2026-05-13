@@ -1,12 +1,12 @@
 """
 ISO 8583 Parser
 """
+import pprint
+
 from data_element_format import DATA_ELEMENT_FORMAT
 
 MTI_BYTE_SIZE = 4
 BITMAP_BYTE_SIZE = 8
-
-secondary_bitmap_available = False
 
 # Original test hex string
 # SAMPLE_HEX_STRING ="""
@@ -41,12 +41,18 @@ SAMPLE_HEX_STRING = """
     32 30 31 31 32 30 31 31 32 30 31 31 32 30 31 31
 """
 
+
+# contains parsed data
+parsed_message_dict = {}
+
 raw_bytes = bytes.fromhex(SAMPLE_HEX_STRING)
 
 # mti is the first four bytes
 mti_bytes = raw_bytes[:MTI_BYTE_SIZE]
-mti = [chr(digit) for digit in mti_bytes]
-print(0, ''.join(mti))
+mti_list = [chr(digit) for digit in mti_bytes]
+MTI_STRING = ''.join(mti_list)
+parsed_message_dict[0] = MTI_STRING
+print(0, MTI_STRING)
 
 
 # read the next 8 bytes, determine presence of secondary bitmap and data elements from binary fields
@@ -101,15 +107,15 @@ for element_index in available_data_elements:
             field_max_length += 1
 
         # another special case if its a binary field DE,
-        # I'm giving hexadecimal characters since its binary information
+        # bytes will "resolve" to hexadecimal values since its binary information
         # else its just ASCII/unicode
         data_bytes = raw_bytes[raw_byte_position: raw_byte_position + field_max_length]
         if content_type == 'b':
-            DATA_STRING = ''.join([format(byte, "02x") for byte in data_bytes])
+            DATA_STRING = ''.join([format(byte, '02X') for byte in data_bytes])
         else:
             DATA_STRING = ''.join([chr(byte) for byte in data_bytes])
         raw_byte_position += field_max_length
-        print(element_index, DATA_STRING, DATA_ELEMENT_FORMAT[element_index].meaning)
+        parsed_message_dict[element_index] = DATA_STRING
 
     # for variable length data elements
     else:
@@ -132,4 +138,9 @@ for element_index in available_data_elements:
                                actual_data_element_byte_length]
         DATA_STRING = ''.join([chr(byte) for byte in data_bytes])
         raw_byte_position += actual_data_element_byte_length
-        print(element_index, DATA_STRING, DATA_ELEMENT_FORMAT[element_index].meaning)
+        parsed_message_dict[element_index] = DATA_STRING
+
+
+
+# completely parsed message to be used as desired
+pprint.pp(parsed_message_dict)
