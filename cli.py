@@ -13,13 +13,13 @@ parser = argparse.ArgumentParser(
     allow_abbrev = False,
     description = textwrap.dedent('''
                 cli.py parses iso_8583 hex strings to JSON.
-                It also parses hex values present in .csv or .xlsx file
+                It also parses hex values present in .csv or .xlsx files
                     in such cases, one hex string is expected per line.
                 Output is to stdout/terminal by default,
                     output.json if -o wih no argument and [argument].json if an argument is provided
                                   
-                NOTE: It's not recommenede to out vaues parsed from csv or excel files to output as
-                      they might be a lot of them.
+                NOTE: It's not recommended to output vaues parsed from csv or excel files to output as
+                      there might be a lot of them.
                 
                 example:
                 python cli.py -x "30 32 30 30 F2 38 44 80 20 C0 80 00 00 00 00 00 ..." -> outputs to terminal
@@ -29,13 +29,13 @@ parser = argparse.ArgumentParser(
 
 
 parser.add_argument('-x', '--hex_string', type=str, help='The iso_8583 hex string to be parsed')
-parser.add_argument('-c', '--csv', metavar='CSV_FILE', help='csv file or files, space seperated')
+parser.add_argument('-c', '--csv', metavar='CSV_FILE', help='csv file or files, space separated')
 parser.add_argument('-e', '--excel', metavar='EXCEL_FILE',
-                    help='.xlsx file or files, space sperated')
+                    help='.xlsx file or files, space sparated')
 
-# if option present and no argument then default is used,
+# if option present and no argument then const is used,
 # else option and accompanying argument is used
-parser.add_argument('-o', '--output', nargs='?', default='output')
+parser.add_argument('-o', '--output', nargs='?', const='output')
 parser.add_argument('-V', '--version', action='version', version='%(prog)s 1.0')
 
 args = parser.parse_args()
