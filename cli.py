@@ -7,6 +7,7 @@ batch processing of messages from CSV and .xlsx files.
 import sys
 import textwrap
 import argparse
+from enum import Enum
 
 parser = argparse.ArgumentParser(
     formatter_class = argparse.RawDescriptionHelpFormatter,
@@ -24,22 +25,55 @@ parser = argparse.ArgumentParser(
                 example:
                 python cli.py -x "30 32 30 30 F2 38 44 80 20 C0 80 00 00 00 00 00 ..." -> outputs to terminal
                 python cli.py --csv file1.csv -o -> outputs to output.json
-                python cli.py -e excel.xlsx -o completed -> output to completed.json
+                python cli.py -e excel.xlsx -o completed -> outputs to completed.json
                 '''))
 
 
 parser.add_argument('-x', '--hex_string', type=str, help='The iso_8583 hex string to be parsed')
 parser.add_argument('-c', '--csv', metavar='CSV_FILE', help='csv file or files, space separated')
 parser.add_argument('-e', '--excel', metavar='EXCEL_FILE',
-                    help='.xlsx file or files, space sparated')
+                    help='.xlsx file or files, space separated')
 
 # if option present and no argument then const is used,
 # else option and accompanying argument is used
 parser.add_argument('-o', '--output', nargs='?', const='output')
 parser.add_argument('-V', '--version', action='version', version='%(prog)s 1.0')
 
-args = parser.parse_args()
-if len(sys.argv) == 1:
-    parser.print_help()
+def get_arguments() -> list:
+    """
+    Function to get values passed to the cli tool, if the values are valid.\n
+    Returns list containing file name/hex string and output file name.
+    """
+    args = parser.parse_args()
 
-print(args.hex_string, args.csv, args.excel, args.output)
+    # No more than one of the input options can be chosen
+    # sys.argv equals 1 only if there are no arguments, it's reasonable to then show the help
+    if len(sys.argv) == 1:
+        parser.print_help()
+        return []
+
+    input_options = []
+    if args.hex_string is not None:
+        input_options.append(args.hex_string)
+    if args.csv is not None:
+        input_options.append(args.csv)
+    if args.excel is not None:
+        input_options.append(args.excel)
+
+    if len(input_options) > 1:
+        print('[INCORRECT-USAGE]: too many input arguments')
+        parser.print_help()
+        return []
+
+    input_options.append(args.output)
+    return input_options
+
+if __name__ == '__main__':
+    # end program if there's nothing to work on
+    arguments = get_arguments()
+    if not arguments:
+        sys.exit(-1)
+
+    input_value = arguments[0]
+    output_file_name = arguments[1]
+    print(arguments)
