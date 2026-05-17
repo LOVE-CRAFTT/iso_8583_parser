@@ -8,6 +8,9 @@ import sys
 import textwrap
 import argparse
 from enum import Enum
+from dataclasses import dataclass
+
+from iso8583 import iso_8583_to_json
 
 parser = argparse.ArgumentParser(
     formatter_class = argparse.RawDescriptionHelpFormatter,
@@ -39,41 +42,85 @@ parser.add_argument('-e', '--excel', metavar='EXCEL_FILE',
 parser.add_argument('-o', '--output', nargs='?', const='output')
 parser.add_argument('-V', '--version', action='version', version='%(prog)s 1.0')
 
-def get_arguments() -> list:
+class InputTypeEnum(Enum):
     """
-    Function to get values passed to the cli tool, if the values are valid.\n
-    Returns list containing file name/hex string and output file name.
+    Enum representing valid input types
+    """
+    CSV = 1
+    EXCEL = 2
+    HEXADECIMAL_STRING = 3
+
+@dataclass
+class ParsedArgs:
+    """
+    Convenience class to move parsed cli arguments around
+    """
+    input_value: str
+    input_type: InputTypeEnum
+    output: str
+
+def get_arguments() -> ParsedArgs | None:
+    """
+    Function to get values passed to the cli tool, if the values are valid.
     """
     args = parser.parse_args()
 
-    # No more than one of the input options can be chosen
     # sys.argv equals 1 only if there are no arguments, it's reasonable to then show the help
     if len(sys.argv) == 1:
         parser.print_help()
-        return []
+        return None
 
-    input_options = []
+    options = []
     if args.hex_string is not None:
-        input_options.append(args.hex_string)
+        options.append((args.hex_string, InputTypeEnum.HEXADECIMAL_STRING))
     if args.csv is not None:
-        input_options.append(args.csv)
+        options.append((args.csv, InputTypeEnum.CSV))
     if args.excel is not None:
-        input_options.append(args.excel)
+        options.append((args.excel, InputTypeEnum.EXCEL))
 
-    if len(input_options) > 1:
+    # if no input was provided
+    if not options:
+        print('[INCORRECT-USAGE]: no input arguments')
+        parser.print_usage()
+        return None
+
+    # more than one input type
+    if len(options) > 1:
         print('[INCORRECT-USAGE]: too many input arguments')
-        parser.print_help()
-        return []
+        parser.print_usage()
+        return None
 
-    input_options.append(args.output)
-    return input_options
+    input_value, input_type = options[0]
+    return ParsedArgs(input_value=input_value, input_type=input_type, output=args.output)
+
+
+def parse_hex(hex_string):
+    """
+    Parse iso_8583 hex strings
+    """
+    print('\n\n ========================================================================')
+    print(iso_8583_to_json(hex_string))
+
+def parse_csv(csv_file): #pylint: disable=unused-argument
+    """
+    Parse iso_8583 hex string in csv files
+    """
+
+def parse_excel(excel_file): #pylint: disable=unused-argument
+    """
+    Parse iso_8583 hex strings in excel files
+    """
+
 
 if __name__ == '__main__':
     # end program if there's nothing to work on
     arguments = get_arguments()
-    if not arguments:
+    if arguments is None:
         sys.exit(-1)
 
-    input_value = arguments[0]
-    output_file_name = arguments[1]
-    print(arguments)
+    if arguments.input_type == InputTypeEnum.HEXADECIMAL_STRING:
+        parse_hex(arguments.input_value)
+    elif arguments.input_type == InputTypeEnum.CSV:
+        parse_csv(arguments.input_type)
+    elif arguments.input_type == InputTypeEnum.EXCEL:
+        parse_excel(arguments.input_type)
