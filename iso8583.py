@@ -3,9 +3,13 @@ ISO 8583 Parser
 """
 # import pprint
 import json
+from exceptions import BitMapError
 from data_element_format import DATA_ELEMENT_FORMAT
 
 MTI_BYTE_SIZE = 4
+BMP_ONE = 1
+BMP_TWO = 2
+BMP_THREE = 3
 BITMAP_BYTE_SIZE = 8
 
 def get_mti(message_bytes: bytes):
@@ -24,11 +28,13 @@ def get_avail_data_elems_and_next_idx(message_bytes: bytes) -> tuple[list, int]:
     This function returns a tuple containing the available data elements
     and index of next read operation.
     """
-    # read the next 8 bytes,
+    # read the next 8 bytes after first 4 bytes used for the mti,
     # determine presence of secondary bitmap and data elements from binary fields
     # set flag accordingly
     # possibly read next 8 bytes to determine next data elements
     bmp_1_bytes = message_bytes[MTI_BYTE_SIZE: MTI_BYTE_SIZE + BITMAP_BYTE_SIZE]
+    if len(bmp_1_bytes) != BITMAP_BYTE_SIZE:
+        raise BitMapError
     bmp_bin_string = ''.join([format(byte, "08b") for byte in bmp_1_bytes])
 
     # Indicates position of cursor/pointer in the bytes object
@@ -39,6 +45,8 @@ def get_avail_data_elems_and_next_idx(message_bytes: bytes) -> tuple[list, int]:
 
     if secondary_bitmap_available:
         bmp_2_bytes = message_bytes[raw_byte_position : raw_byte_position + BITMAP_BYTE_SIZE]
+        if len(bmp_2_bytes) != BITMAP_BYTE_SIZE:
+            raise BitMapError
         bmp_2_bin_string = ''.join([format(byte, "08b") for byte in bmp_2_bytes])
         bmp_bin_string += (bmp_2_bin_string)
 
@@ -58,7 +66,7 @@ def get_avail_data_elems_and_next_idx(message_bytes: bytes) -> tuple[list, int]:
     return (available_data_elements, raw_byte_position)
 
 
-def iso_8583_to_json(iso_8583_hex_string) -> str:
+def iso_8583_to_json(iso_8583_hex_string: str) -> str | None:
     """
     Convert an iso 8583 message --given as a hexadecimal string--
     and return a JSON string
@@ -66,12 +74,26 @@ def iso_8583_to_json(iso_8583_hex_string) -> str:
     # contains parsed data
     parsed_message_dict = {}
 
-    raw_bytes = bytes.fromhex(iso_8583_hex_string)
+    if not iso_8583_hex_string:
+        return None
+
+    try:
+        raw_bytes = bytes.fromhex(iso_8583_hex_string)
+    except ValueError:
+        #TODO: generalize this process into a function
+        print("============================================")
+        print("Error: non hexadecimal character encountered")
+        return None
 
     mti = get_mti(raw_bytes)
     parsed_message_dict[0] = mti
 
-    available_data_elements, raw_byte_position = get_avail_data_elems_and_next_idx(raw_bytes)
+    try:
+        available_data_elements, raw_byte_position = get_avail_data_elems_and_next_idx(raw_bytes)
+    except BitMapError:
+        print("============================================")
+        print("Incorrect Bitmap Length")
+        return None
 
     # main loop
     for element_index in available_data_elements:

@@ -5,9 +5,9 @@ batch processing of messages from CSV and .xlsx files.
 """
 
 import sys
+# import csv
 import textwrap
 import argparse
-import csv
 from enum import Enum
 from dataclasses import dataclass
 from pathlib import Path
@@ -59,7 +59,7 @@ class ParsedArgs:
     """
     input_value: str
     input_type: InputTypeEnum
-    output: str
+    output: str | None
 
 def get_arguments() -> ParsedArgs | None:
     """
@@ -95,75 +95,95 @@ def get_arguments() -> ParsedArgs | None:
     input_value, input_type = options[0]
     return ParsedArgs(input_value=input_value, input_type=input_type, output=args.output)
 
-def preprocess_source_and_dest_files(input_file_name, output_file_name, input_file_type):
-    """empty"""
+def preprocess_source_and_dest_files(user_args: ParsedArgs) -> tuple[str, str | None]:
+    """
+    Performs sanity check on given input/output values:
+        Checks if output file is not provided and provides opportunity for one to be given,
+        Confirms that full name (with extension) of file is provided.
+        Confirms that file is .csv or .xlsx
+        Returns tuple with input file name and (possibly new) output file name
+    """
+
+    # Warn if output file name not provided
     first_pass_through = True
-    while not output_file_name:
+    while not user_args.output:
         if first_pass_through:
             print(textwrap.dedent("""
                   It's not recommended to output vaues parsed from csv or excel files to output
-                  as there might be a lot of them!!!"""))
+                  as there might be a lot of them\n"""))
         response = input("Output to file instead? (y/n): ")
         if response.lower() == 'n':
             break
         if response.lower() == 'y':
-            output_file_name = input("\nEnter file name: ")
+            user_args.output = input("\nEnter file name: ")
         else:
             print("\nInvalid response, try again\n")
             first_pass_through = False
 
-    input_path = Path(input_file_name)
+
+    # The program requires the full name of the input file, with the extensions
+    # A single dot is not considered a valid extension
+    input_path = Path(user_args.input_value)
     if not input_path.suffix or input_path.suffix == '.':
         print('ERROR: Please include the full filename with file extension (.csv or .xlsx).')
         sys.exit(-1)
 
-    if input_file_type == InputTypeEnum.CSV:
+    if user_args.input_type == InputTypeEnum.CSV:
         if input_path.suffix != '.csv':
             print('Error: Input file must have a .csv extension')
             sys.exit(-1)
-    elif input_file_type == InputTypeEnum.EXCEL:
+    elif user_args.input_type == InputTypeEnum.EXCEL:
         if input_path.suffix != '.xlsx':
             print('Error: Input file must have a .xlsx extension')
             sys.exit(-1)
 
     if not input_path.exists():
-        print(f"ERROR: File '{input_file_name} could not be found")
+        print(f"ERROR: File '{user_args.input_value} could not be found")
         sys.exit(-1)
 
-    # attempt to open files
-    with open(input_file_name) as csv_file:
-        r = csv.reader(csv_file)
-        for row in r:
-            print(row)
+    return user_args.input_value, user_args.output
 
 
-
-
-def parse_hex(hex_string, output_file_name):
+def parse_hex(hex_args: ParsedArgs):
     """
     Parse iso_8583 hex strings
     """
-    parsed_json_string = iso_8583_to_json(hex_string)
-    if output_file_name is None:
+    parsed_json_string = iso_8583_to_json(hex_args.input_value)
+    parsed_json_string = parsed_json_string if parsed_json_string else "{}"
+    if hex_args.output is None:
         print('\n\n=======================================================================')
         print(parsed_json_string)
     else:
         #TODO: replace with just the output_file_name.json
-        p = 'random' / Path(output_file_name + '.json')
+        p = 'random' / Path(hex_args.output + '.json')
         p.write_text(parsed_json_string)
 
 
-def parse_csv(csv_file_name, output_file_name):
+def parse_csv(csv_args: ParsedArgs):
     """
     Parse iso_8583 hex string in csv files
     """
-    preprocess_source_and_dest_files(csv_file_name, output_file_name, InputTypeEnum.CSV)
+    # file name values after sanity checks
+    csv_file_name, output_file_name = preprocess_source_and_dest_files(csv_args)
+    print(csv_file_name, output_file_name)
 
-def parse_excel(excel_file_name, output_file_name): #pylint: disable=unused-argument
+    # open csv_file for reading
+    # open output_file for writing
+    # loop
+    # counter starting from 1, success starting from 0, failure starting from 0
+    # read string from csv file and pass as is to the iso_8583_to_json function
+    # if any error is encountered while processing a message, None is returned from the function
+        # nothing is put in the output file for that count/index
+    # put output to output.json
+    # close input and output files
+    # print number of successes/failures
+
+def parse_excel(excel_args: ParsedArgs):
     """
     Parse iso_8583 hex strings in excel files
     """
-    preprocess_source_and_dest_files(excel_file_name, output_file_name, InputTypeEnum.EXCEL)
+    excel_file_name, output_file_name = preprocess_source_and_dest_files(excel_args)
+    print(excel_file_name, output_file_name)
 
 
 if __name__ == '__main__':
@@ -173,8 +193,8 @@ if __name__ == '__main__':
         sys.exit(-1)
 
     if arguments.input_type == InputTypeEnum.HEXADECIMAL_STRING:
-        parse_hex(arguments.input_value, arguments.output)
+        parse_hex(arguments)
     elif arguments.input_type == InputTypeEnum.CSV:
-        parse_csv(arguments.input_value, arguments.output)
+        parse_csv(arguments)
     elif arguments.input_type == InputTypeEnum.EXCEL:
-        parse_excel(arguments.input_value, arguments.output)
+        parse_excel(arguments)
