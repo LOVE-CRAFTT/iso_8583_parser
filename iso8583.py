@@ -3,7 +3,7 @@ ISO 8583 Parser
 """
 # import pprint
 import json
-from exceptions import BitMapError
+from exceptions import BitMapOneError, BitMapTwoError
 from data_element_format import DATA_ELEMENT_FORMAT
 
 MTI_BYTE_SIZE = 4
@@ -34,7 +34,7 @@ def get_avail_data_elems_and_next_idx(message_bytes: bytes) -> tuple[list, int]:
     # possibly read next 8 bytes to determine next data elements
     bmp_1_bytes = message_bytes[MTI_BYTE_SIZE: MTI_BYTE_SIZE + BITMAP_BYTE_SIZE]
     if len(bmp_1_bytes) != BITMAP_BYTE_SIZE:
-        raise BitMapError
+        raise BitMapOneError
     bmp_bin_string = ''.join([format(byte, "08b") for byte in bmp_1_bytes])
 
     # Indicates position of cursor/pointer in the bytes object
@@ -46,7 +46,7 @@ def get_avail_data_elems_and_next_idx(message_bytes: bytes) -> tuple[list, int]:
     if secondary_bitmap_available:
         bmp_2_bytes = message_bytes[raw_byte_position : raw_byte_position + BITMAP_BYTE_SIZE]
         if len(bmp_2_bytes) != BITMAP_BYTE_SIZE:
-            raise BitMapError
+            raise BitMapTwoError
         bmp_2_bin_string = ''.join([format(byte, "08b") for byte in bmp_2_bytes])
         bmp_bin_string += (bmp_2_bin_string)
 
@@ -90,9 +90,13 @@ def iso_8583_to_json(iso_8583_hex_string: str) -> str | None:
 
     try:
         available_data_elements, raw_byte_position = get_avail_data_elems_and_next_idx(raw_bytes)
-    except BitMapError:
+    except (BitMapOneError, BitMapTwoError) as e:
+        if isinstance(e, BitMapOneError):
+            origin = BMP_ONE
+        else:
+            origin = BMP_TWO
         print("============================================")
-        print("Incorrect Bitmap Length")
+        print(f"Incorrect Bitmap {origin} Length")
         return None
 
     # main loop
@@ -110,10 +114,15 @@ def iso_8583_to_json(iso_8583_hex_string: str) -> str | None:
             if content_type == 'x+n':
                 field_max_length += 1
 
+            data_bytes = raw_bytes[raw_byte_position: raw_byte_position + field_max_length]
+            if len(data_bytes) != field_max_length:
+                print("============================================")
+                print(f"Incomplete data for data element: {element_index}")
+                return None
+
             # another special case if its a binary field DE,
             # bytes will "resolve" to hexadecimal values since its binary information
             # else its ASCII/unicode
-            data_bytes = raw_bytes[raw_byte_position: raw_byte_position + field_max_length]
             if content_type == 'b':
                 data_string = ''.join([format(byte, '02X') for byte in data_bytes])
             else:
@@ -128,6 +137,12 @@ def iso_8583_to_json(iso_8583_hex_string: str) -> str | None:
             length_of_field_max_length = len(str(field_max_length))
             data_element_length_bytes = raw_bytes[raw_byte_position :
                                                 raw_byte_position + length_of_field_max_length]
+            if len(data_element_length_bytes) != length_of_field_max_length:
+                print("============================================")
+                print(f'Cannot retrieve length for variable field length data element:'
+                       f'{element_index}')
+                return None
+
             raw_byte_position += length_of_field_max_length
 
             actual_data_element_byte_length = int(''.join([chr(byte) for byte
@@ -140,6 +155,10 @@ def iso_8583_to_json(iso_8583_hex_string: str) -> str | None:
 
             data_bytes = raw_bytes[raw_byte_position: raw_byte_position +
                                 actual_data_element_byte_length]
+            if len(data_bytes) != actual_data_element_byte_length:
+                print("============================================")
+                print(f"Incomplete data for data element: {element_index}")
+                return None
             data_string = ''.join([chr(byte) for byte in data_bytes])
             raw_byte_position += actual_data_element_byte_length
             parsed_message_dict[element_index] = data_string
