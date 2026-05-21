@@ -5,7 +5,6 @@ batch processing of messages from CSV and .xlsx files.
 """
 
 import sys
-# import csv
 import textwrap
 import argparse
 from enum import Enum
@@ -151,7 +150,7 @@ def parse_hex(hex_args: ParsedArgs):
     parsed_json_string = iso_8583_to_json(hex_args.input_value)
     parsed_json_string = parsed_json_string if parsed_json_string else "{}"
     if hex_args.output is None:
-        print('\n\n=======================================================================')
+        print('\n================================= COMPLETED ===================================')
         print(parsed_json_string)
     else:
         #TODO: replace with just the output_file_name.json
