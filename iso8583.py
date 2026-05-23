@@ -89,7 +89,7 @@ def get_avail_data_elems_and_next_idx(message_bytes: bytes) -> tuple[list, int]:
     # possibly read next 8 bytes to determine next data elements
     bmp_1_bytes = message_bytes[MTI_BYTE_SIZE: MTI_BYTE_SIZE + BITMAP_BYTE_SIZE]
     if len(bmp_1_bytes) != BITMAP_BYTE_SIZE:
-        print_error("Incorrect Bitmap 1 Length")
+        print_error("Insufficient data for bitmap 1")
         raise BitMapOneError
     bmp_bin_string = ''.join([format(byte, "08b") for byte in bmp_1_bytes])
 
@@ -102,7 +102,7 @@ def get_avail_data_elems_and_next_idx(message_bytes: bytes) -> tuple[list, int]:
     if secondary_bitmap_available:
         bmp_2_bytes = message_bytes[raw_byte_position : raw_byte_position + BITMAP_BYTE_SIZE]
         if len(bmp_2_bytes) != BITMAP_BYTE_SIZE:
-            print_error("Incorrect Bitmap 2 Length")
+            print_error("Insufficient data for bitmap 2")
             raise BitMapTwoError
         bmp_2_bin_string = ''.join([format(byte, "08b") for byte in bmp_2_bytes])
         bmp_bin_string += (bmp_2_bin_string)

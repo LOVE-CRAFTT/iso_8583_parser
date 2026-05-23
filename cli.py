@@ -148,9 +148,13 @@ def parse_hex(hex_args: ParsedArgs):
     Parse iso_8583 hex strings
     """
     parsed_json_string = iso_8583_to_json(hex_args.input_value)
+    success = bool(parsed_json_string)
     parsed_json_string = parsed_json_string if parsed_json_string else "{}"
+
+    if success:
+        print('\n========================= COMPLETED SUCCESSFULLY ===========================')
+
     if hex_args.output is None:
-        print('\n================================= COMPLETED ===================================')
         print(parsed_json_string)
     else:
         #TODO: replace with just the output_file_name.json
