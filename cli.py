@@ -35,9 +35,8 @@ parser = argparse.ArgumentParser(
 
 
 parser.add_argument('-x', '--hex_string', type=str, help='The iso_8583 hex string to be parsed')
-parser.add_argument('-c', '--csv', metavar='CSV_FILE', help='csv file or files, space separated')
-parser.add_argument('-e', '--excel', metavar='EXCEL_FILE',
-                    help='.xlsx file or files, space separated')
+parser.add_argument('-c', '--csv', metavar='CSV_FILE', help='csv file')
+parser.add_argument('-e', '--excel', metavar='EXCEL_FILE', help='.xlsx file')
 
 # if option present and no argument then const is used,
 # else option and accompanying argument is used
@@ -46,7 +45,7 @@ parser.add_argument('-V', '--version', action='version', version='%(prog)s 1.0')
 
 class InputTypeEnum(Enum):
     """
-    Enum representing valid input types
+    Enum representing valid input types.
     """
     CSV = 1
     EXCEL = 2
@@ -55,7 +54,7 @@ class InputTypeEnum(Enum):
 @dataclass
 class ParsedArgs:
     """
-    Convenience class to move parsed cli arguments around
+    Convenience class to move parsed cli arguments around.
     """
     input_value: str
     input_type: InputTypeEnum
@@ -100,8 +99,8 @@ def preprocess_source_and_dest_files(user_args: ParsedArgs) -> tuple[str, str | 
     Performs sanity check on given input/output values:
         Checks if output file is not provided and provides opportunity for one to be given,
         Confirms that full name (with extension) of file is provided.
-        Confirms that file is .csv or .xlsx
-        Returns tuple with input file name and (possibly new) output file name
+        Confirms that file is .csv or .xlsx.
+        Returns tuple with input file name and (possibly new) output file name.
     """
 
     # Warn if output file name not provided
@@ -146,7 +145,7 @@ def preprocess_source_and_dest_files(user_args: ParsedArgs) -> tuple[str, str | 
 
 def parse_hex(hex_args: ParsedArgs):
     """
-    Parse iso_8583 hex strings
+    Parse iso_8583 hex strings.
     """
     parsed_json_string = iso_8583_to_json(hex_args.input_value)
     success = bool(parsed_json_string)
@@ -162,6 +161,33 @@ def parse_hex(hex_args: ParsedArgs):
         output_file = 'random' / Path(hex_args.output + '.json')
         output_file.write_text(parsed_json_string)
 
+def process_csv_rows(reader, dest=None) -> tuple[int, int]:
+    """
+    Process each row in the csv file, parsing each message and writing the result to 
+    dest if provided, otherwise writing to stdout.
+    Returns a tuple of (success_count, failure_count).
+    """
+    counter = 0
+    success = 0
+    failure = 0
+
+    for line in reader:
+        counter += 1
+
+        # if correctly formatted, the first and only data per line is the hex message
+        hex_message = line[0]
+        result = iso_8583_to_json(hex_message)
+        if result:
+            success += 1
+            if dest:
+                dest.write(f'"{counter}": {result},\n')
+            else:
+                print(f'"{counter}": {result}')
+        else:
+            failure += 1
+            print(f'Error origin: Row {counter}\n')
+    return (success, failure)
+
 
 def parse_csv(csv_args: ParsedArgs):
     """
@@ -169,47 +195,33 @@ def parse_csv(csv_args: ParsedArgs):
     """
     # file name values after sanity checks
     csv_file_name, output_file_name = preprocess_source_and_dest_files(csv_args)
-    counter = 0
-    success = 0
-    failure = 0
 
     csv.field_size_limit(sys.maxsize)
 
     print('\n================================= PROCESSING ===================================')
 
     with open(csv_file_name, 'r', encoding='utf-8', newline='') as source:
+        reader = csv.reader(source)
 
         if output_file_name:
             output_file_name += '.json'
             output_file_name = 'random/' + output_file_name #TODO: Remove this hot piece of garbage
             with open(output_file_name, 'w', encoding='utf-8') as dest:
                 # manually input starting braces
-                size_written = dest.write('{\n')
+                dest.write('{\n')
 
-                reader = csv.reader(source)
-                for line in reader:
-                    counter += 1
-
-                    # if correctly formatted, the first and only data per line is the hex message
-                    hex_message = line[0]
-                    result = iso_8583_to_json(hex_message)
-                    if result:
-                        success += 1
-
-                        size_written += dest.write(f'"{counter}": {result},\n')
-                    else:
-                        failure += 1
-                        print(f'Error origin: Row {counter}\n')
+                success, failure = process_csv_rows(reader, dest)
 
                 # manually close brace
-                dest.seek(size_written - 2)
+                dest.seek(dest.tell() - 2)
                 dest.write('\n}')
 
         else:
-            pass
+            success, failure = process_csv_rows(reader)
 
     print('\n================================= COMPLETED ===================================')
     print(f'Completed with {success} successes and {failure} failures')
+
 
 def parse_excel(excel_args: ParsedArgs):
     """
