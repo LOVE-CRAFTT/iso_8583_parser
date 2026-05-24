@@ -5,6 +5,7 @@ batch processing of messages from CSV and .xlsx files.
 """
 
 import sys
+import csv
 import textwrap
 import argparse
 from enum import Enum
@@ -158,8 +159,8 @@ def parse_hex(hex_args: ParsedArgs):
         print(parsed_json_string)
     else:
         #TODO: replace with just the output_file_name.json
-        p = 'random' / Path(hex_args.output + '.json')
-        p.write_text(parsed_json_string)
+        output_file = 'random' / Path(hex_args.output + '.json')
+        output_file.write_text(parsed_json_string)
 
 
 def parse_csv(csv_args: ParsedArgs):
@@ -168,18 +169,47 @@ def parse_csv(csv_args: ParsedArgs):
     """
     # file name values after sanity checks
     csv_file_name, output_file_name = preprocess_source_and_dest_files(csv_args)
-    print(csv_file_name, output_file_name)
+    counter = 0
+    success = 0
+    failure = 0
 
-    # open csv_file for reading
-    # open output_file for writing
-    # loop
-    # counter starting from 1, success starting from 0, failure starting from 0
-    # read string from csv file and pass as is to the iso_8583_to_json function
-    # if any error is encountered while processing a message, None is returned from the function
-        # nothing is put in the output file for that count/index
-    # put output to output.json
-    # close input and output files
-    # print number of successes/failures
+    csv.field_size_limit(sys.maxsize)
+
+    print('\n================================= PROCESSING ===================================')
+
+    with open(csv_file_name, 'r', encoding='utf-8', newline='') as source:
+
+        if output_file_name:
+            output_file_name += '.json'
+            output_file_name = 'random/' + output_file_name #TODO: Remove this hot piece of garbage
+            with open(output_file_name, 'w', encoding='utf-8') as dest:
+                # manually input starting braces
+                size_written = dest.write('{\n')
+
+                reader = csv.reader(source)
+                for line in reader:
+                    counter += 1
+
+                    # if correctly formatted, the first and only data per line is the hex message
+                    hex_message = line[0]
+                    result = iso_8583_to_json(hex_message)
+                    if result:
+                        success += 1
+
+                        size_written += dest.write(f'"{counter}": {result},\n')
+                    else:
+                        failure += 1
+                        print(f'Error origin: Row {counter}\n')
+
+                # manually close brace
+                dest.seek(size_written - 2)
+                dest.write('\n}')
+
+        else:
+            pass
+
+    print('\n================================= COMPLETED ===================================')
+    print(f'Completed with {success} successes and {failure} failures')
 
 def parse_excel(excel_args: ParsedArgs):
     """

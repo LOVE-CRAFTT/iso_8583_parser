@@ -131,6 +131,7 @@ def iso_8583_to_json(iso_8583_hex_string: str) -> str | None:
     parsed_message_dict = {}
 
     if not iso_8583_hex_string:
+        print_error("empty hex string")
         return None
 
     try:
