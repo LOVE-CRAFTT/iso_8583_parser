@@ -165,7 +165,7 @@ def process_csv_rows(reader, dest=None) -> tuple[int, int]:
         counter += 1
 
         # if correctly formatted, the first and only data per line is the hex message
-        hex_message = line[0]
+        hex_message = line[0] if line else ""
         result = iso_8583_to_json(hex_message)
         if result:
             success += 1
