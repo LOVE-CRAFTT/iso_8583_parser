@@ -22,9 +22,9 @@ parser = argparse.ArgumentParser(
                 It also parses hex values present in .csv files
                     in such cases, one hex string is expected per line.
                 Output is to stdout/terminal by default,
-                    output.json if -o wih no argument and [argument].json if an argument is provided
+                    output.json if -o with no argument and [argument].json if an argument is provided
                                   
-                NOTE: It's not recommended to output vaues parsed from csv files to output as
+                NOTE: It's not recommended to output values parsed from csv files to output as
                       there might be a lot of them.
                 
                 example:
@@ -103,7 +103,7 @@ def preprocess_source_and_dest_files(user_args: ParsedArgs) -> tuple[str, str | 
     while not user_args.output:
         if first_pass_through:
             print(textwrap.dedent("""
-                  It's not recommended to output vaues parsed from csv files to output
+                  It's not recommended to output values parsed from csv files to output
                   as there might be a lot of them\n"""))
         response = input("Output to file instead? (y/n): ")
         if response.lower() == 'n':
@@ -128,7 +128,7 @@ def preprocess_source_and_dest_files(user_args: ParsedArgs) -> tuple[str, str | 
             sys.exit(-1)
 
     if not input_path.exists():
-        print(f"ERROR: File '{user_args.input_value} could not be found")
+        print(f"ERROR: File '{user_args.input_value}' could not be found")
         sys.exit(-1)
 
     return user_args.input_value, user_args.output

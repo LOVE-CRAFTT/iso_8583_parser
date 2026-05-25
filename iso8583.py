@@ -45,7 +45,7 @@ def confirm_data_length(mesg_bytes: bytes, correct_len: int, element_index:int) 
 
 def mti_in_range(mti: int) -> bool:
     """
-    Pass
+    True if within 0000 to 9997
     """
     return MTI_LOWER_BOUND <= mti <= MTI_UPPER_BOUND
 
