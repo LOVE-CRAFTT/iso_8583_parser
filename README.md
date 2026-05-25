@@ -36,7 +36,8 @@ cd iso_8583_parser
 - python cli.py -c csvfile.csv -> outputs to terminal (not recommended)
 ```
 
-NOTE: For .csv files, it's expected that each row contains a single message and nothing else, see <a href="./misc/csv-test-input.csv">csv-test-input</a> for sample
+NOTE: For .csv files, it's expected that each row contains a single message and nothing else, see <a href="./misc/csv-test-input.csv">csv-test-input</a> for samples
+> Sample messages used for testing were sourced from Sarvatra technologies' ISO 8583 message specifications document for their EFT Switch product.
 
 ## Demo
 - Parsing hex to terminal
