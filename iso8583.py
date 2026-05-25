@@ -1,5 +1,6 @@
 """
 ISO 8583 Parser
+ISO 8583:1987 spec as described by https://en.wikipedia.org/wiki/ISO_8583
 """
 # import pprint
 import json
