@@ -1,6 +1,6 @@
 """
-ISO 8583 Parser
-ISO 8583:1987 spec as described by https://en.wikipedia.org/wiki/ISO_8583
+ISO 8583 Parser.
+ISO 8583:1987 spec as described by https://en.wikipedia.org/wiki/ISO_8583.
 """
 # import pprint
 import json
@@ -16,14 +16,14 @@ MTI_UPPER_BOUND = 9997
 
 def print_error(message: str) -> None:
     """
-    Formatted error message
+    Formatted error message.
     """
     print("============================================")
     print(f'Error: {message}')
 
 def get_data_string(data_bytes:bytes, content_type:str) -> str:
     """
-    Returns decoded message string based on content_type
+    Returns decoded message string based on content_type.
     """
     # Special case if its a binary field DE,
     # bytes will "resolve" to hexadecimal values since its binary information
@@ -45,7 +45,7 @@ def confirm_data_length(mesg_bytes: bytes, correct_len: int, element_index:int) 
 
 def mti_in_range(mti: int) -> bool:
     """
-    True if within 0000 to 9997
+    True if within 0000 to 9997.
     """
     return MTI_LOWER_BOUND <= mti <= MTI_UPPER_BOUND
 
@@ -61,19 +61,19 @@ def get_mti(message_bytes: bytes):
     # mti is the first four bytes
     mti_bytes = message_bytes[:MTI_BYTE_SIZE]
     if len(mti_bytes) != MTI_BYTE_SIZE:
-        print_error("Insufficent data for MTI")
+        print_error("Insufficent data for MTI.")
         raise MTIError
 
     try:
         mti_list = [chr(digit) for digit in mti_bytes]
     except ValueError:
-        print_error("Malformed data for MTI")
+        print_error("Malformed data for MTI.")
         raise
 
     # mti must be integer
     mti_string = ''.join(mti_list)
     if not mti_string.isdecimal() or not mti_in_range(int(mti_string)):
-        print_error("Decoded MTI invalid")
+        print_error("Decoded MTI invalid.")
         raise MTIError
 
     return mti_string
@@ -90,7 +90,7 @@ def get_avail_data_elems_and_next_idx(message_bytes: bytes) -> tuple[list, int]:
     # possibly read next 8 bytes to determine next data elements
     bmp_1_bytes = message_bytes[MTI_BYTE_SIZE: MTI_BYTE_SIZE + BITMAP_BYTE_SIZE]
     if len(bmp_1_bytes) != BITMAP_BYTE_SIZE:
-        print_error("Insufficient data for bitmap 1")
+        print_error("Insufficient data for bitmap 1.")
         raise BitMapOneError
     bmp_bin_string = ''.join([format(byte, "08b") for byte in bmp_1_bytes])
 
@@ -117,28 +117,27 @@ def get_avail_data_elems_and_next_idx(message_bytes: bytes) -> tuple[list, int]:
     # removing them prevents if statements checking for their existence later
     available_data_elements = []
     index = 0
-    while index < len(bmp_bin_string):
-        if bmp_bin_string[index] == '1' and index not in (0, 64):
+    for index, bit in enumerate(bmp_bin_string):
+        if bit == '1' and index not in (0, 64):
             available_data_elements.append(index + 1)
-        index += 1
     return (available_data_elements, raw_byte_position)
 
 def iso_8583_to_json(iso_8583_hex_string: str) -> str | None:
     """
     Convert an iso 8583 message --given as a hexadecimal string--
-    and return a JSON string
+    and return a JSON string.
     """
     # contains parsed data
     parsed_message_dict = {}
 
     if not iso_8583_hex_string:
-        print_error("empty hex string")
+        print_error("Empty hex string.")
         return None
 
     try:
         raw_bytes = bytes.fromhex(iso_8583_hex_string)
     except ValueError:
-        print_error("non-hexadecimal character encountered")
+        print_error("Non-hexadecimal character encountered.")
         return None
 
     try:

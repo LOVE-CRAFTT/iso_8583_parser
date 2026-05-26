@@ -94,7 +94,7 @@ def preprocess_source_and_dest_files(user_args: ParsedArgs) -> tuple[str, str | 
     Performs sanity check on given input/output values:
         Checks if output file is not provided and provides opportunity for one to be given,
         Confirms that full name (with extension) of file is provided.
-        Confirms that file is .csv file
+        Confirms that file is .csv file.
         Returns tuple with input file name and (possibly new) output file name.
     """
 
@@ -175,7 +175,7 @@ def process_csv_rows(reader, dest=None) -> tuple[int, int]:
                 print(f'"{counter}": {result}\n')
         else:
             failure += 1
-            print(f'Error origin: Row {counter}\n')
+            print(f'Error origin: Row {counter}.\n')
     return (success, failure)
 
 

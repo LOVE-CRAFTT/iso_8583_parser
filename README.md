@@ -58,7 +58,7 @@ NOTE: For .csv files, it's expected that each row contains a single message and 
 - Add ability to convert JSON to ISO 8583 message format
 - Add support for the 1993 and 2003 specs
 
-## CONTACT
+## Contact
 Created by Chukwuemeka Brendan Chukwudi.
 
 For bug report and feature requests, please open an issue.
