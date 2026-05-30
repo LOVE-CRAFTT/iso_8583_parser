@@ -24,16 +24,24 @@ cd iso_8583_parser
 
 ### Parsing single messages
 ```
-- python cli.py -x "30 32 30 30 F2 38 44 80 20 C0 80 00 00 00 00 00 ..." -> outputs to terminal
-- python cli.py -x "30 32 30 30 F2 38 44 80 20 C0 80 00 00 00 00 00 ..." -o -> outputs to output.json
-- python cli.py -x "30 32 30 30 F2 38 44 80 20 C0 80 00 00 00 00 00 ..." -o file -> outputs to file.json
+python cli.py -x "30 32 30 30 F2 38 44 80 20 C0 80 00 00 00 00 00 ..." -> outputs to terminal
+```
+```
+python cli.py -x "30 32 30 30 F2 38 44 80 20 C0 80 00 00 00 00 00 ..." -o -> outputs to output.json
+```
+```
+python cli.py -x "30 32 30 30 F2 38 44 80 20 C0 80 00 00 00 00 00 ..." -o file -> outputs to file.json
 ```
 
 ### Batch parsing from csv files
 ```
-- python cli.py --csv csvfile.csv -o -> outputs to output.json
-- python cli.py -c csvfile.csv -o file -> outputs to file.json
-- python cli.py -c csvfile.csv -> outputs to terminal (not recommended)
+python cli.py --csv csvfile.csv -o -> outputs to output.json
+```
+```
+python cli.py -c csvfile.csv -o file -> outputs to file.json
+```
+```
+python cli.py -c csvfile.csv -> outputs to terminal (not recommended)
 ```
 
 NOTE: For .csv files, it's expected that each row contains a single message and nothing else, see <a href="./misc/csv-test-input.csv">csv-test-input</a> for samples
@@ -63,4 +71,4 @@ Created by Chukwuemeka Brendan Chukwudi.
 
 For bug report and feature requests, please open an issue.
 
-For private inquiries or collaborations: armandhammer11@yahoo.com
+For private inquiries or collaborations: chukwuemekachukwudi9@gmail.com
